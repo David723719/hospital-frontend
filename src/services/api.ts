@@ -1,7 +1,7 @@
 // ✅ Tu configuración de proxy - MANTENER
 const API = '/api';
 
-// ✅ Fetch principal - TU VERSIÓN con pequeño ajuste para manejar errores 500
+// ✅ Fetch principal - TU VERSIÓN con credentials agregada
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API}${endpoint}`;
   try {
@@ -18,17 +18,16 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
     const res = await fetch(url, { 
       method,
       headers,
-      credentials: 'include',  // ← AGREGAR: Para cookies/auth si las usas
+      credentials: 'include',  // ← AGREGAR ESTA LÍNEA
       ...options 
     });
     
     const data = await res.json().catch(() => ({}));
     
     if (!res.ok) {
-      // Manejar error 500 con mensaje más claro
       if (res.status === 500) {
-        console.error(`❌ ${endpoint}: HTTP 500 - Revisa logs de Railway`);
-        throw new Error('Error interno del servidor. Revisa el backend.');
+        console.error(`❌ ${endpoint}: HTTP 500 - Backend error`);
+        throw new Error('Error interno del servidor');
       }
       const validationError =
         data?.errors && typeof data.errors === 'object'
@@ -42,7 +41,7 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
   } catch (e: any) {
     const isNetworkError = e?.message === 'Failed to fetch';
     const message = isNetworkError
-      ? 'No se pudo conectar con el backend (CORS/red/URL). Revisa que el backend esté activo en Railway.'
+      ? 'No se pudo conectar con el backend'
       : e.message;
     console.error(`❌ ${endpoint}:`, message);
     throw new Error(message);
@@ -67,7 +66,7 @@ async function fetchIntegration<T>(service: string, endpoint: string): Promise<T
   } catch { return null; }
 }
 
-// ✅ API COMPLETA - TU VERSIÓN (sin cambios, ya usa PascalCase)
+// ✅ API COMPLETA - TU VERSIÓN (sin cambios)
 export const api = {
   pacientes: {
     list: () => fetchApi<any[]>('/pacientes'),
