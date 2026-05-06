@@ -1,5 +1,31 @@
-export function Button({ children, variant = 'primary', className = '', ...props }: any) {
-    const base = 'px-4 py-2 rounded-lg font-medium transition border cursor-pointer';
-    const v = { primary: 'bg-hospital-600 text-white hover:bg-hospital-700 border-transparent', outline: 'border-slate-300 text-slate-700 hover:bg-slate-50', danger: 'bg-red-600 text-white hover:bg-red-700 border-transparent' };
-    return <button className={`${base} ${v[variant as keyof typeof v]} ${className}`} {...props}>{children}</button>;
-  }
+export function Button({ 
+  children, 
+  type = 'button', 
+  variant = 'primary',
+  onClick,
+  className = '',
+  disabled = false
+}: { 
+  children: React.ReactNode;
+  type?: 'button' | 'submit';
+  variant?: 'primary' | 'outline';
+  onClick?: () => void;
+  className?: string;
+  disabled?: boolean;
+}) {
+  const base = 'px-4 py-2 rounded font-medium transition';
+  const styles = variant === 'primary' 
+    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+    : 'border border-gray-300 text-gray-700 hover:bg-gray-50';
+  
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${base} ${styles} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+    >
+      {children}
+    </button>
+  );
+}
