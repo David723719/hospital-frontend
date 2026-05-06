@@ -1,7 +1,5 @@
-// En desarrollo usa proxy de Vite para evitar CORS.
-const API =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? '/api' : 'https://hospitalizacion-api-production.up.railway.app/api');
+// Usar misma origin en navegador; Vite (dev) y Vercel (prod) hacen proxy/rewrite.
+const API = '/api';
 
 // ✅ Fetch principal con manejo de errores
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
