@@ -1,7 +1,7 @@
-// Usar misma origin en navegador; Vite (dev) y Vercel (prod) hacen proxy/rewrite.
+// ✅ Tu configuración de proxy - MANTENER
 const API = '/api';
 
-// ✅ Fetch principal con manejo de errores
+// ✅ Fetch principal - TU VERSIÓN con pequeño ajuste para manejar errores 500
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API}${endpoint}`;
   try {
@@ -11,7 +11,6 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
       ...(options?.headers || {})
     };
 
-    // Evita preflight innecesario en GET/DELETE para reducir errores CORS.
     if (hasBody && !('Content-Type' in (headers as Record<string, string>))) {
       (headers as Record<string, string>)['Content-Type'] = 'application/json';
     }
@@ -19,10 +18,18 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
     const res = await fetch(url, { 
       method,
       headers,
+      credentials: 'include',  // ← AGREGAR: Para cookies/auth si las usas
       ...options 
     });
+    
     const data = await res.json().catch(() => ({}));
+    
     if (!res.ok) {
+      // Manejar error 500 con mensaje más claro
+      if (res.status === 500) {
+        console.error(`❌ ${endpoint}: HTTP 500 - Revisa logs de Railway`);
+        throw new Error('Error interno del servidor. Revisa el backend.');
+      }
       const validationError =
         data?.errors && typeof data.errors === 'object'
           ? Object.values(data.errors).flat().find(Boolean)
@@ -35,14 +42,14 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
   } catch (e: any) {
     const isNetworkError = e?.message === 'Failed to fetch';
     const message = isNetworkError
-      ? 'No se pudo conectar con el backend (CORS/red/URL).'
+      ? 'No se pudo conectar con el backend (CORS/red/URL). Revisa que el backend esté activo en Railway.'
       : e.message;
     console.error(`❌ ${endpoint}:`, message);
     throw new Error(message);
   }
 }
 
-// ✅ Fetch para integraciones externas
+// ✅ Fetch para integraciones externas - TU VERSIÓN (sin cambios)
 async function fetchIntegration<T>(service: string, endpoint: string): Promise<T | null> {
   const urls: Record<string, string> = {
     farmacia: 'https://hospital3ernivel-farmacia.onrender.com',
@@ -60,10 +67,8 @@ async function fetchIntegration<T>(service: string, endpoint: string): Promise<T
   } catch { return null; }
 }
 
-// ✅ API COMPLETA - PascalCase para C#
+// ✅ API COMPLETA - TU VERSIÓN (sin cambios, ya usa PascalCase)
 export const api = {
-  
-  // === PACIENTES ===
   pacientes: {
     list: () => fetchApi<any[]>('/pacientes'),
     create: (d: any) => {
@@ -72,7 +77,6 @@ export const api = {
         Nombre: d.nombre
       };
       if (d.fechaNacimiento) payload.FechaNacimiento = d.fechaNacimiento;
-
       return fetchApi('/pacientes', {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -80,8 +84,6 @@ export const api = {
     },
     delete: (codigo: string) => fetchApi(`/pacientes/${codigo}`, { method: 'DELETE' }),
   },
-
-  // === CAMAS ===
   camas: {
     list: () => fetchApi<any[]>('/camas'),
     disponibles: () => fetchApi<any[]>('/camas/disponibles'),
@@ -94,8 +96,6 @@ export const api = {
       body: JSON.stringify({ EstadoOperativo: estado }) 
     }),
   },
-
-  // === ADMISIONES ===
   admisiones: {
     list: () => fetchApi<any[]>('/admisiones'),
     create: (d: any) => {
@@ -106,7 +106,6 @@ export const api = {
         Especialidad: d.especialidad
       };
       if (d.fechaIngreso) payload.FechaIngreso = new Date(d.fechaIngreso).toISOString();
-
       return fetchApi('/admisiones', {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -114,8 +113,6 @@ export const api = {
     },
     delete: (codigo: string) => fetchApi(`/admisiones/${codigo}`, { method: 'DELETE' }),
   },
-
-  // === TRATAMIENTOS ===
   tratamientos: {
     list: () => fetchApi<any[]>('/tratamientos'),
     create: (d: any) => fetchApi('/tratamientos', { 
@@ -131,21 +128,15 @@ export const api = {
     }),
     delete: (codigo: string) => fetchApi(`/tratamientos/${codigo}`, { method: 'DELETE' }),
   },
-
-  // === REPORTES ===
   mis: {
     mensual: () => fetchApi<any[]>('/mis/estadistica-mensual'),
   },
-
-  // === INTEGRACIONES ===
   integracion: {
     farmacia: { catalogo: () => fetchIntegration<any[]>('farmacia', '/api/Medicamentos/catalogo') },
     emergencias: { triaje: () => fetchIntegration<any[]>('emergencias', '/api/triaje/pendientes') },
     rrhh: { medicos: () => fetchIntegration<any[]>('rrhh', '/api/doctores') },
     logistica: { camas: () => fetchIntegration<any[]>('logistica', '/api/camas') },
   },
-
-  // === FACTURACIÓN ===
   facturacion: {
     calcularEstimado: (dias: number, tipo: 'general'|'intermedia'|'uci') => {
       const tarifas = { general: 150, intermedia: 300, uci: 800 };
