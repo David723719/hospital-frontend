@@ -41,7 +41,7 @@ export function CamasPage() {
   };
 
   const toggleEstado = async (codigo: string, actual: string) => {
-    const nuevo = actual === 'Disponible' ? 'Ocupada' : 'Disponible';
+    const nuevo = actual === 'Activo' ? 'Inactivo' : 'Activo';
     try {
       await api.camas.cambiarEstado(codigo, nuevo);
       setToast({ message: `Estado: ${nuevo}`, type: 'success' });
@@ -72,7 +72,7 @@ export function CamasPage() {
             {camas.map((c: any) => (
               <div key={c.codigo} className="border p-4 rounded flex justify-between items-center">
                 <div><p className="font-bold">{c.codigo}</p><p className="text-sm text-gray-500">{c.unidad} - {c.tipo}</p></div>
-                <button onClick={() => toggleEstado(c.codigo, c.estadoOperativo)} className={`px-3 py-1 rounded text-sm ${c.estadoOperativo === 'Disponible' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{c.estadoOperativo}</button>
+                <button onClick={() => toggleEstado(c.codigo, c.estado)} className={`px-3 py-1 rounded text-sm ${c.estado === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{c.estado}</button>
               </div>
             ))}
           </div>
