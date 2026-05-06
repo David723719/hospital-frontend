@@ -6,7 +6,6 @@ import { CamasPage } from './pages/CamasPage';
 import { AdmisionesPage } from './pages/AdmisionesPage';
 import { TratamientosPage } from './pages/TratamientosPage';
 import { ReportesPage } from './pages/ReportesPage';
-import { FacturacionPage } from './pages/FacturacionPage';
 import { IntegracionesPage } from './pages/IntegracionesPage';
 
 function App() {
@@ -20,11 +19,11 @@ function App() {
           <Route path="/admisiones" element={<AdmisionesPage />} />
           <Route path="/tratamientos" element={<TratamientosPage />} />
           <Route path="/reportes" element={<ReportesPage />} />
-          <Route path="/facturacion" element={<FacturacionPage />} />
           <Route path="/integraciones" element={<IntegracionesPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
   );
 }
+
 export default App;

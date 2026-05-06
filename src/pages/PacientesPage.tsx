@@ -7,7 +7,7 @@ import { Toast } from '../components/Toast';
 export function PacientesPage() {
   const [pacientes, setPacientes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<{message: string; type: 'success'|'error'} | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [form, setForm] = useState({ codigo: '', nombre: '', fechaNacimiento: '' });
 
   const loadPacientes = async () => {
@@ -15,77 +15,133 @@ export function PacientesPage() {
     try {
       const data = await api.pacientes.list();
       setPacientes(data);
-    } catch (e: any) {
-      setToast({ message: `❌ Error: ${e.message}`, type: 'error' });
+    } catch (error: any) {
+      setToast({ message: `❌ Error: ${error.message}`, type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { loadPacientes(); }, []);
+  useEffect(() => {
+    loadPacientes();
+  }, []);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.codigo || !form.nombre) {
-      setToast({ message: '⚠️ Código y nombre son obligatorios', type: 'error' });
+      setToast({ message: '⚠️ Complete los campos obligatorios', type: 'error' });
       return;
     }
+
     try {
       await api.pacientes.create(form);
-      setToast({ message: '✅ Paciente registrado', type: 'success' });
+      setToast({ message: '✅ Paciente registrado correctamente', type: 'success' });
       setForm({ codigo: '', nombre: '', fechaNacimiento: '' });
       loadPacientes();
-    } catch (e: any) {
-      setToast({ message: `❌ ${e.message}`, type: 'error' });
+    } catch (error: any) {
+      setToast({ message: `❌ Error: ${error.message}`, type: 'error' });
     }
   };
 
   const handleDelete = async (codigo: string) => {
-    if (!confirm('¿Dar de baja este paciente?')) return;
+    if (!confirm('¿Está seguro de dar de baja este paciente?')) return;
+
     try {
       await api.pacientes.delete(codigo);
-      setToast({ message: '🗑️ Paciente dado de baja', type: 'success' });
+      setToast({ message: '✅ Paciente dado de baja', type: 'success' });
       loadPacientes();
-    } catch (e: any) {
-      setToast({ message: `❌ ${e.message}`, type: 'error' });
+    } catch (error: any) {
+      setToast({ message: `❌ Error: ${error.message}`, type: 'error' });
     }
   };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">👥 Gestión de Pacientes</h1>
-      
+      <h1 className="text-2xl font-bold text-gray-800">👥 Gestión de Pacientes</h1>
+
       <Card>
-        <h3 className="font-semibold mb-4">Registrar Nuevo Paciente</h3>
-        <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <h2 className="text-lg font-semibold mb-4">Registrar Nuevo Paciente</h2>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="text-sm font-medium">Código *</label>
-            <input required className="w-full mt-1 p-2 border rounded" value={form.codigo} onChange={e => setForm({...form, codigo: e.target.value})} placeholder="Ej: PAC-001" />
+            <label className="block text-sm font-medium mb-1">Código *</label>
+            <input
+              type="text"
+              value={form.codigo}
+              onChange={(e) => setForm({ ...form, codigo: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              placeholder="PAC-001"
+              required
+            />
           </div>
+
           <div>
-            <label className="text-sm font-medium">Nombre *</label>
-            <input required className="w-full mt-1 p-2 border rounded" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} placeholder="Nombre completo" />
+            <label className="block text-sm font-medium mb-1">Nombre *</label>
+            <input
+              type="text"
+              value={form.nombre}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              placeholder="Nombre completo"
+              required
+            />
           </div>
+
           <div>
-            <label className="text-sm font-medium">Fecha Nacimiento</label>
-            <input type="date" className="w-full mt-1 p-2 border rounded" value={form.fechaNacimiento} onChange={e => setForm({...form, fechaNacimiento: e.target.value})} />
+            <label className="block text-sm font-medium mb-1">Fecha Nacimiento</label>
+            <input
+              type="date"
+              value={form.fechaNacimiento}
+              onChange={(e) => setForm({ ...form, fechaNacimiento: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
           </div>
-          <Button type="submit">Registrar</Button>
+
+          <div className="flex items-end">
+            <Button type="submit" className="w-full">
+              Registrar
+            </Button>
+          </div>
         </form>
       </Card>
 
       <Card>
-        <h3 className="font-semibold mb-4">Pacientes Registrados ({pacientes.length})</h3>
-        {loading ? <p>Cargando...</p> : pacientes.length === 0 ? (
-          <p className="text-slate-500">No hay pacientes registrados.</p>
+        <h2 className="text-lg font-semibold mb-4">Pacientes Registrados ({pacientes.length})</h2>
+
+        {loading ? (
+          <p className="text-gray-500 text-center py-8">Cargando...</p>
+        ) : pacientes.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No hay pacientes registrados</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50"><tr><th className="p-3 text-left">Código</th><th className="p-3 text-left">Nombre</th><th className="p-3 text-left">Nacimiento</th><th className="p-3">Acción</th></tr></thead>
-              <tbody>{pacientes.map((p: any) => (
-                <tr key={p.codigo} className="border-t"><td className="p-3 font-medium">{p.codigo}</td><td className="p-3">{p.nombre}</td><td className="p-3">{p.fechaNacimiento?.split('T')[0]}</td>
-                <td className="p-3"><Button variant="outline" className="px-2 py-1 text-xs" onClick={() => handleDelete(p.codigo)}>Baja</Button></td></tr>
-              ))}</tbody>
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Código</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nombre</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nacimiento</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {pacientes.map((paciente) => (
+                  <tr key={paciente.codigo} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm font-medium">{paciente.codigo}</td>
+                    <td className="px-4 py-3 text-sm">{paciente.nombre}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {paciente.fechaNacimiento?.split('T')[0] || 'N/A'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        variant="outline"
+                        onClick={() => handleDelete(paciente.codigo)}
+                        className="text-sm"
+                      >
+                        Dar de Baja
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         )}

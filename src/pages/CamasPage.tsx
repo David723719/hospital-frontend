@@ -65,7 +65,315 @@ export function CamasPage() {
     setToast({ message: '🛏️ Cama asignada cargada en el formulario', type: 'success' });
   };
 
+  return (import { useState, useEffect } from 'react';
+    import { api } from '../services/api';
+    import { Card } from '../components/Card';
+    import { Button } from '../components/Button';
+    import { Toast } from '../components/Toast';
+    
+    export function CamasPage() {
+      const [camas, setCamas] = useState<any[]>([]);
+      const [loading, setLoading] = useState(true);
+      const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+      const [form, setForm] = useState({ codigo: '', unidad: 'General', tipo: 'Estándar' });
+    
+      const loadCamas = async () => {
+        setLoading(true);
+        try {
+          const data = await api.camas.list();
+          setCamas(data);
+        } catch (error: any) {
+          setToast({ message: `❌ Error: ${error.message}`, type: 'error' });
+        } finally {
+          setLoading(false);
+        }
+      };
+    
+      useEffect(() => {
+        loadCamas();
+      }, []);
+    
+      const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!form.codigo) {
+          setToast({ message: '⚠️ El código es obligatorio', type: 'error' });
+          return;
+        }
+    
+        try {
+          await api.camas.create(form);
+          setToast({ message: '✅ Cama registrada correctamente', type: 'success' });
+          setForm({ codigo: '', unidad: 'General', tipo: 'Estándar' });
+          loadCamas();
+        } catch (error: any) {
+          setToast({ message: `❌ Error: ${error.message}`, type: 'error' });
+        }
+      };
+    
+      const handleToggleEstado = async (cama: any) => {
+        const nuevoEstado = cama.estadoOperativo === 'Disponible' ? 'Ocupada' : 'Disponible';
+        try {
+          await api.camas.cambiarEstado(cama.codigo, nuevoEstado);
+          setToast({ message: `✅ Estado cambiado a ${nuevoEstado}`, type: 'success' });
+          loadCamas();
+        } catch (error: any) {
+          setToast({ message: `❌ Error: ${error.message}`, type: 'error' });
+        }
+      };
+    
+      return (
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold text-gray-800">🛏️ Gestión de Camas</h1>
+    
+          <Card>
+            <h2 className="text-lg font-semibold mb-4">Registrar Nueva Cama</h2>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Código *</label>
+                <input
+                  type="text"
+                  value={form.codigo}
+                  onChange={(e) => setForm({ ...form, codigo: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="CAM-001"
+                  required
+                />
+              </div>
+    
+              <div>
+                <label className="block text-sm font-medium mb-1">Unidad</label>
+                <select
+                  value={form.unidad}
+                  onChange={(e) => setForm({ ...form, unidad: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option>General</option>
+                  <option>UCI</option>
+                  <option>Pediatría</option>
+                  <option>Emergencias</option>
+                </select>
+              </div>
+    
+              <div>
+                <label className="block text-sm font-medium mb-1">Tipo</label>
+                <select
+                  value={form.tipo}
+                  onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option>Estándar</option>
+                  <option>Eléctrica</option>
+                  <option>Crítica</option>
+                </select>
+              </div>
+    
+              <div className="flex items-end">
+                <Button type="submit" className="w-full">
+                  Registrar
+                </Button>
+              </div>
+            </form>
+          </Card>
+    
+          <Card>
+            <h2 className="text-lg font-semibold mb-4">Camas Registradas ({camas.length})</h2>
+    
+            {loading ? (
+              <p className="text-gray-500 text-center py-8">Cargando...</p>
+            ) : camas.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No hay camas registradas</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {camas.map((cama) => (
+                  <div
+                    key={cama.codigo}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-lg">{cama.codigo}</h3>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          cama.estadoOperativo === 'Disponible'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {cama.estadoOperativo}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-1">Unidad: {cama.unidad}</p>
+                    <p className="text-sm text-gray-600 mb-3">Tipo: {cama.tipo}</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleToggleEstado(cama)}
+                      className="w-full text-sm"
+                    >
+                      {cama.estadoOperativo === 'Disponible' ? 'Marcar Ocupada' : 'Marcar Disponible'}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+    
+          {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+        </div>import { useState, useEffect } from 'react';
+import { api } from '../services/api';
+import { Card } from '../components/Card';
+import { Button } from '../components/Button';
+import { Toast } from '../components/Toast';
+
+export function CamasPage() {
+  const [camas, setCamas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [form, setForm] = useState({ codigo: '', unidad: 'General', tipo: 'Estándar' });
+
+  const loadCamas = async () => {
+    setLoading(true);
+    try {
+      const data = await api.camas.list();
+      setCamas(data);
+    } catch (error: any) {
+      setToast({ message: `❌ Error: ${error.message}`, type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCamas();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.codigo) {
+      setToast({ message: '⚠️ El código es obligatorio', type: 'error' });
+      return;
+    }
+
+    try {
+      await api.camas.create(form);
+      setToast({ message: '✅ Cama registrada correctamente', type: 'success' });
+      setForm({ codigo: '', unidad: 'General', tipo: 'Estándar' });
+      loadCamas();
+    } catch (error: any) {
+      setToast({ message: `❌ Error: ${error.message}`, type: 'error' });
+    }
+  };
+
+  const handleToggleEstado = async (cama: any) => {
+    const nuevoEstado = cama.estadoOperativo === 'Disponible' ? 'Ocupada' : 'Disponible';
+    try {
+      await api.camas.cambiarEstado(cama.codigo, nuevoEstado);
+      setToast({ message: `✅ Estado cambiado a ${nuevoEstado}`, type: 'success' });
+      loadCamas();
+    } catch (error: any) {
+      setToast({ message: `❌ Error: ${error.message}`, type: 'error' });
+    }
+  };
+
   return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800">🛏️ Gestión de Camas</h1>
+
+      <Card>
+        <h2 className="text-lg font-semibold mb-4">Registrar Nueva Cama</h2>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Código *</label>
+            <input
+              type="text"
+              value={form.codigo}
+              onChange={(e) => setForm({ ...form, codigo: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="CAM-001"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Unidad</label>
+            <select
+              value={form.unidad}
+              onChange={(e) => setForm({ ...form, unidad: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option>General</option>
+              <option>UCI</option>
+              <option>Pediatría</option>
+              <option>Emergencias</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Tipo</label>
+            <select
+              value={form.tipo}
+              onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option>Estándar</option>
+              <option>Eléctrica</option>
+              <option>Crítica</option>
+            </select>
+          </div>
+
+          <div className="flex items-end">
+            <Button type="submit" className="w-full">
+              Registrar
+            </Button>
+          </div>
+        </form>
+      </Card>
+
+      <Card>
+        <h2 className="text-lg font-semibold mb-4">Camas Registradas ({camas.length})</h2>
+
+        {loading ? (
+          <p className="text-gray-500 text-center py-8">Cargando...</p>
+        ) : camas.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No hay camas registradas</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {camas.map((cama) => (
+              <div
+                key={cama.codigo}
+                className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-lg">{cama.codigo}</h3>
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      cama.estadoOperativo === 'Disponible'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {cama.estadoOperativo}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">Unidad: {cama.unidad}</p>
+                <p className="text-sm text-gray-600 mb-3">Tipo: {cama.tipo}</p>
+                <Button
+                  variant="outline"
+                  onClick={() => handleToggleEstado(cama)}
+                  className="w-full text-sm"
+                >
+                  {cama.estadoOperativo === 'Disponible' ? 'Marcar Ocupada' : 'Marcar Disponible'}
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+    </div>
+  );
+}
+      );
+    }
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">🛏️ Gestión de Camas</h1>
       
