@@ -1,7 +1,5 @@
-// ✅ Proxy de Vercel - MANTENER
 const API = '/api';
 
-// ✅ Fetch principal
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API}${endpoint}`;
   try {
@@ -19,7 +17,6 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
   }
 }
 
-// ✅ Fetch para integraciones externas
 async function fetchIntegration<T>(service: string, endpoint: string): Promise<T | null> {
   const urls: Record<string, string> = {
     farmacia: 'https://hospital3ernivel-farmacia.onrender.com',
@@ -38,10 +35,7 @@ async function fetchIntegration<T>(service: string, endpoint: string): Promise<T
   }
 }
 
-// ✅ API COMPLETA - Todos los métodos que usan las páginas
 export const api = {
-  
-  // === PACIENTES ===
   pacientes: {
     list: () => fetchApi<any[]>('/pacientes'),
     create: (d: any) => fetchApi('/pacientes', {
@@ -50,8 +44,6 @@ export const api = {
     }),
     delete: (codigo: string) => fetchApi(`/pacientes/${codigo}`, { method: 'DELETE' }),
   },
-
-  // === CAMAS ===
   camas: {
     list: () => fetchApi<any[]>('/camas'),
     disponibles: () => fetchApi<any[]>('/camas/disponibles'),
@@ -65,8 +57,6 @@ export const api = {
         body: JSON.stringify({ Estado: estado }),
       }),
   },
-
-  // === ADMISIONES ===
   admisiones: {
     list: () => fetchApi<any[]>('/admisiones'),
     create: (d: any) => fetchApi('/admisiones', {
@@ -81,8 +71,6 @@ export const api = {
     }),
     delete: (codigo: string) => fetchApi(`/admisiones/${codigo}`, { method: 'DELETE' }),
   },
-
-  // === TRATAMIENTOS ===
   tratamientos: {
     list: () => fetchApi<any[]>('/tratamientos'),
     create: (d: any) => fetchApi('/tratamientos', {
@@ -98,34 +86,19 @@ export const api = {
     }),
     delete: (codigo: string) => fetchApi(`/tratamientos/${codigo}`, { method: 'DELETE' }),
   },
-
-  // === REPORTES MIS ===
   mis: {
     mensual: () => fetchApi<any[]>('/mis/estadistica-mensual'),
-    ocupacion: () => fetchApi<any[]>('/mis/ocupacion-camas'),
-    conteo: () => fetchApi<any[]>('/mis/conteo-unidad'),
   },
-
-  // === INTEGRACIONES ===
   integracion: {
-    farmacia: {
-      catalogo: () => fetchIntegration<any[]>('farmacia', '/api/Medicamentos/catalogo'),
-    },
-    emergencias: {
-      triaje: () => fetchIntegration<any[]>('emergencias', '/api/triaje/pendientes'),
-    },
-    rrhh: {
-      medicos: () => fetchIntegration<any[]>('rrhh', '/api/doctores'),
-    },
-    logistica: {
-      camas: () => fetchIntegration<any[]>('logistica', '/api/camas'),
-    },
+    farmacia: { catalogo: () => fetchIntegration<any[]>('farmacia', '/api/Medicamentos/catalogo') },
+    emergencias: { triaje: () => fetchIntegration<any[]>('emergencias', '/api/triaje/pendientes') },
+    rrhh: { medicos: () => fetchIntegration<any[]>('rrhh', '/api/doctores') },
+    logistica: { camas: () => fetchIntegration<any[]>('logistica', '/api/camas') },
   },
-
-  // === FACTURACIÓN ===
+  // ✅ FACTURACIÓN - Calculadora local (no requiere backend)
   facturacion: {
     calcularEstimado: (dias: number, tipo: 'general' | 'intermedia' | 'uci') => {
-      const tarifas = { general: 150, intermedia: 300, uci: 800 };
+      const tarifas: Record<string, number> = { general: 150, intermedia: 300, uci: 800 };
       const subtotal = dias * (tarifas[tipo] || 150);
       const impuestos = subtotal * 0.19;
       const total = subtotal + impuestos;
