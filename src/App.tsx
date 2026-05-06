@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Layout } from './components/Layout';  // ← Import correcto
+import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { PacientesPage } from './pages/PacientesPage';
 import { CamasPage } from './pages/CamasPage';
@@ -12,7 +12,7 @@ import { IntegracionesPage } from './pages/IntegracionesPage';
 function App() {
   return (
     <BrowserRouter>
-      <Layout>  {/* ← Layout como componente, no como ruta */}
+      <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/pacientes" element={<PacientesPage />} />
@@ -27,5 +27,4 @@ function App() {
     </BrowserRouter>
   );
 }
-
 export default App;

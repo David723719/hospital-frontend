@@ -11,46 +11,30 @@ export function CamasPage() {
   const [form, setForm] = useState({ codigo: '', unidad: 'General', tipo: 'Estándar' });
 
   useEffect(() => { loadCamas(); }, []);
-
   const loadCamas = async () => {
     setLoading(true);
-    try {
-      const data = await api.camas.list();
-      setCamas(data);
-    } catch (e: any) {
-      setToast({ message: 'Error al cargar', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
+    try { setCamas(await api.camas.list()); }
+    catch (e: any) { setToast({ message: 'Error al cargar', type: 'error' }); }
+    finally { setLoading(false); }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.codigo) {
-      setToast({ message: 'Código obligatorio', type: 'error' });
-      return;
-    }
+    if (!form.codigo) { setToast({ message: 'Código obligatorio', type: 'error' }); return; }
     try {
       await api.camas.create(form);
       setToast({ message: 'Cama registrada', type: 'success' });
       setForm({ codigo: '', unidad: 'General', tipo: 'Estándar' });
       loadCamas();
-    } catch (e: any) {
-      setToast({ message: e.message, type: 'error' });
-    }
+    } catch (e: any) { setToast({ message: e.message, type: 'error' }); }
   };
-
   const toggleEstado = async (codigo: string, actual: string) => {
     const nuevo = actual === 'Activo' ? 'Inactivo' : 'Activo';
     try {
       await api.camas.cambiarEstado(codigo, nuevo);
       setToast({ message: `Estado: ${nuevo}`, type: 'success' });
       loadCamas();
-    } catch (e: any) {
-      setToast({ message: e.message, type: 'error' });
-    }
+    } catch (e: any) { setToast({ message: e.message, type: 'error' }); }
   };
-
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Camas</h1>

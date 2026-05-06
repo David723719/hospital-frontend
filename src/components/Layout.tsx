@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';  // ← ESTE IMPORT FALTABA
+import { Link, useLocation } from 'react-router-dom';
 import { Home, Users, Bed, FileText, Pill, BarChart3, Link2, DollarSign } from 'lucide-react';
 
 const nav = [
@@ -13,10 +13,8 @@ const nav = [
   { path: '/integraciones', label: 'Integraciones', icon: Link2 },
 ];
 
-// ✅ EXPORTACIÓN CORRECTA (named export)
 export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
-  
   return (
     <div className="min-h-screen bg-slate-50 flex">
       <aside className="w-64 bg-hospital-900 text-white p-4 flex flex-col">
@@ -26,15 +24,8 @@ export function Layout({ children }: { children: ReactNode }) {
             const Icon = item.icon;
             const active = location.pathname === item.path;
             return (
-              <Link 
-                key={item.path} 
-                to={item.path} 
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                  active ? 'bg-hospital-600' : 'hover:bg-hospital-800'
-                }`}
-              >
-                <Icon size={18} />
-                <span>{item.label}</span>
+              <Link key={item.path} to={item.path} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${active ? 'bg-hospital-600' : 'hover:bg-hospital-800'}`}>
+                <Icon size={18} /><span>{item.label}</span>
               </Link>
             );
           })}
