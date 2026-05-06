@@ -41,7 +41,15 @@ async function fetchIntegration<T>(service: string, endpoint: string): Promise<T
 export const api = {
   pacientes: {
     list: () => fetchApi<any[]>('/pacientes'),
-    create: (d: any) => fetchApi('/pacientes', { method: 'POST', body: JSON.stringify({ Codigo: d.codigo, Nombre: d.nombre, FechaNacimiento: d.fechaNacimiento }) }),
+    create: (d: any) =>
+      fetchApi('/pacientes', {
+        method: 'POST',
+        body: JSON.stringify({
+          Codigo: d.codigo,
+          Nombre: d.nombre,
+          FechaNacimiento: d.fechaNacimiento ? new Date(d.fechaNacimiento).toISOString() : null,
+        }),
+      }),
     delete: (codigo: string) => fetchApi(`/pacientes/${codigo}`, { method: 'DELETE' }),
   },
   camas: {
