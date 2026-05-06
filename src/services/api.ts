@@ -1,14 +1,22 @@
+// ✅ src/services/api.ts - COPIA TODO ESTO
+
 const API = 'https://hospitalizacion-api-production.up.railway.app/api';
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API}${endpoint}`;
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    credentials: 'include', ...options
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.mensaje || data.message || data.error || `HTTP ${res.status}`);
-  return data;
+  try {
+    const res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      credentials: 'include',
+      ...options,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.mensaje || data.message || data.error || `HTTP ${res.status}`);
+    return data;
+  } catch (e: any) {
+    console.error(`❌ ${endpoint}:`, e.message);
+    throw e;
+  }
 }
 
 async function fetchIntegration<T>(service: string, endpoint: string): Promise<T | null> {
@@ -20,10 +28,16 @@ async function fetchIntegration<T>(service: string, endpoint: string): Promise<T
   };
   const baseUrl = urls[service];
   if (!baseUrl) return null;
-  try { const res = await fetch(`${baseUrl}${endpoint}`); if (!res.ok) return null; return await res.json(); }
-  catch { return null; }
+  try {
+    const res = await fetch(`${baseUrl}${endpoint}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
+// ✅ EXPORTACIÓN COMPLETA CON INTEGRACIONES
 export const api = {
   pacientes: {
     list: () => fetchApi<any[]>('/pacientes'),
@@ -46,7 +60,10 @@ export const api = {
     create: (d: any) => fetchApi('/tratamientos', { method: 'POST', body: JSON.stringify({ Codigo: d.codigo, AdmisionCodigo: d.admisionCodigo, NombreMedicamento: d.nombreMedicamento, Dosis: d.dosis, DuracionDias: d.duracionDias, FechaInicio: d.fechaInicio || new Date().toISOString() }) }),
     delete: (codigo: string) => fetchApi(`/tratamientos/${codigo}`, { method: 'DELETE' }),
   },
-  mis: { mensual: () => fetchApi<any[]>('/mis/estadistica-mensual') },
+  mis: {
+    mensual: () => fetchApi<any[]>('/mis/estadistica-mensual'),
+  },
+  // ✅ ESTA ES LA PARTE QUE TE FALTABA
   integracion: {
     farmacia: { catalogo: () => fetchIntegration<any[]>('farmacia', '/api/Medicamentos/catalogo') },
     emergencias: { triaje: () => fetchIntegration<any[]>('emergencias', '/api/triaje/pendientes') },
